@@ -31,3 +31,5 @@ vignettes/*.pdf
 po/*~
 # RStudio Connect folder
 rsconnect/
+#data folders
+data/

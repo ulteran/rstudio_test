@@ -1,0 +1,63 @@
+---
+title: "Download data with download button"
+output:
+flexdashboard::flex_dashboard:
+orientation: columns
+vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(DT)
+library(downloadthis)
+library(dplyr)
+```
+
+```{r, echo=FALSE}
+
+shinyInput <- function(FUN, n, id, ...) {
+      vapply(seq_len(n), function(i){
+        as.character(FUN(paste0(id, i), ...))
+      }, character(1))
+      
+}
+
+downloadButtonRmd <- function (outputId, label = "Download", class = NULL, ...)  {
+     tags$a(id = outputId, class = paste("btn btn-default shiny-download-link", 
+        class), href = "", target = "_blank", download = NA, 
+        icon("download"), label, ...)
+}
+
+tab <- data.frame(head(mtcars[1:3]))
+tab <- tab %>% mutate(
+    dl1 = shinyInput(actionButton, nrow(.), 'button_', label = "Download", onclick = 'Shiny.onInputChange(\"select_button\",  this.id)' ),
+    dl2 = shinyInput(downloadButtonRmd, nrow(.), 'button_', label = "Download",onclick = 'Shiny.onInputChange(\"select_button1\", this.id)' ))
+                 
+
+# renderDataTable({
+#   tab %>%
+#     datatable(extensions = 'Buttons',
+#             options = list(dom = 'Blfrtip',
+#                            buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+#                            lengthMenu = list(c(10,25,50,-1),
+#                                              c(10,25,50,"All"))))
+#   })
+
+renderDT({
+  datatable(tab,
+                  options = list(pageLength = 25,
+                                 dom        = "rt"),
+                  rownames = FALSE,
+                  escape   = FALSE)})  
+
+
+observeEvent(input$select_button1, {
+selectedRow <<- as.numeric(strsplit(input$select_button1, "_")[[1]][2])
+      cat(input$select_button1)
+  
+  downloadHandler(filename = "Academic Report.csv",
+                  content = function(file) {write.csv(tab[selectedRow,1:3], file, row.names = FALSE)},
+                  contentType = "text/csv")
+})
+```
